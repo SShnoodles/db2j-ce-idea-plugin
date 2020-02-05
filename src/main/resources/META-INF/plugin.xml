@@ -1,0 +1,37 @@
+<idea-plugin>
+    <id>cc.ssnoodles.db2j-plugin-ce</id>
+    <name>Db2j-CE</name>
+    <vendor email="ssnoodles0226@gmail.com" url="https://github.com/SShnoodles/db2j-ce-idea-plugin">ssnoodles</vendor>
+
+    <description>
+        <![CDATA[
+        <ul>
+            <li>Help you generate java files from database tables.<li/>
+            <li>Support Oracle、Postgresql、Mysql.<li/>
+            <li>Dependence spring、spring-data-jpa、lambok、querydsl annotations.<li/>
+        </ul>
+        <ul>
+           <li>Generate list:<li/>
+           <li>* Pojo<li/>
+           <li>* Dto<li/>
+           <li>* Jpa<li/>
+        <ul/>
+        ]]>
+    </description>
+
+    <idea-version since-build="181"/>
+
+    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+         on how to target different products -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceImplementation="cc.ssnoodles.plugin.service.Db2jCeStateService"/>
+    </extensions>
+
+    <actions>
+        <action id="db2j-ce" class="cc.ssnoodles.plugin.MainAction" text="Db2j-CE" description="Generating java files from database tables.">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>
