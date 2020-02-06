@@ -1,17 +1,19 @@
 package cc.ssnoodles.plugin.ui;
 
+import cc.ssnoodles.db.constant.DbType;
 import cc.ssnoodles.db.constant.TemplateType;
 import cc.ssnoodles.db.domain.*;
 import cc.ssnoodles.db.handler.Template;
-import cc.ssnoodles.db.util.FileUtil;
-import cc.ssnoodles.db.util.StringUtil;
+import cc.ssnoodles.db.util.*;
 import cc.ssnoodles.plugin.service.*;
 import cc.ssnoodles.plugin.util.UiUtil;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.util.IconLoader;
 import com.intellij.ui.components.JBList;
+import com.intellij.ui.scale.*;
 import com.intellij.ui.treeStructure.Tree;
 
 import javax.swing.*;
@@ -19,6 +21,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.tree.*;
 import java.awt.event.*;
+import java.time.LocalDateTime;
 import java.util.*;
 
 public class MainDialog extends JDialog {
@@ -44,7 +47,7 @@ public class MainDialog extends JDialog {
 
     private static final String SEPARATOR = " | ";
 
-    private static final String HISTORY = "history";
+    private static final String ICONS = "/icons/";
 
     public MainDialog(AnActionEvent anActionEvent) {
         this.project = anActionEvent.getData(PlatformDataKeys.PROJECT);
@@ -92,12 +95,21 @@ public class MainDialog extends JDialog {
         templateTypes.setSelectionModel(listSelect);
 
         // init tree root node
-        DefaultMutableTreeNode database = new DefaultMutableTreeNode("Database");
-        tableTree.setModel(new DefaultTreeModel(database));
+        List<Table> tables = db2jCeStateService.getTables();
+        if (tables != null) {
+            tableTree.setModel(toTreeNode(tables));
+        } else {
+            DefaultMutableTreeNode database = new DefaultMutableTreeNode("Database");
+            tableTree.setModel(new DefaultTreeModel(database));
+        }
 
-        Map<String, Config> configMap = db2jCeStateService.getConfig();
-        if (configMap != null && configMap.get(HISTORY) != null) {
-            config = configMap.get(HISTORY);
+        // set tree multiple
+        TreeSelectionModel treeSelect = tableTree.getSelectionModel();
+        treeSelect.setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
+        tableTree.setSelectionModel(treeSelect);
+
+        Config config = db2jCeStateService.getConfig();
+        if (config != null) {
             jdbcUrl.setText(config.getUrl());
             username.setText(config.getUsername());
             password.setText(config.getPassword());
@@ -105,8 +117,10 @@ public class MainDialog extends JDialog {
             author.setText(config.getAuthor());
             outPath.setText(config.getOutPath());
             isOverwriteFiles.setSelected(config.isOverwriteFiles());
-            for (TemplateType template : config.getTemplates()) {
-                templateTypes.setSelectedIndex(template.ordinal());
+            if (config.getTemplates() != null && config.getTemplates().length > 0) {
+                for (TemplateType template : config.getTemplates()) {
+                    templateTypes.setSelectedIndex(template.ordinal());
+                }
             }
             customTemplate.setText(config.getCustomTemplate());
         } else {
@@ -117,6 +131,7 @@ public class MainDialog extends JDialog {
             outPath.setText(defaultOutPath);
             templateTypes.setSelectedIndex(0);
         }
+        this.config = config;
 
         jdbcUrl.getDocument().addDocumentListener(new DocumentListener() {
             @Override
@@ -160,16 +175,25 @@ public class MainDialog extends JDialog {
                 MainDialog.this.config.setPassword(new String(password.getPassword()));
             }
         });
+        loadButton.setIcon(IconLoader.getIcon(ICONS + "reload.png"));
         loadButton.addActionListener(e -> {
             TemplateImpl template = new TemplateImpl();
             try {
+                MainDialog.this.config.setDbType(DbType.getFromUrl(jdbcUrl.getText()));
                 template.init(this.config);
             } catch (Exception ex) {
                 Messages.showErrorDialog(project, ex.getMessage(), "Database Collection Error");
                 return;
             }
-            List<Table> tables = TemplateImpl.TABLES;
-            DefaultMutableTreeNode root = new DefaultMutableTreeNode("Database");
+            tableTree.setModel(toTreeNode(TemplateImpl.TABLES));
+            db2jCeStateService.setTables(TemplateImpl.TABLES);
+        });
+    }
+
+    private TreeModel toTreeNode(List<Table> tables) {
+        if (tables != null && tables.size() > 0) {
+            String dateTime = tables.get(0).getDateTime() == null ? "" : TimeUtil.DATE_TIME_SS.format(tables.get(0).getDateTime());
+            DefaultMutableTreeNode root = new DefaultMutableTreeNode("Database" + SEPARATOR + "Refreshed " + dateTime);
             for (Table table : tables) {
                 DefaultMutableTreeNode tableNode = new DefaultMutableTreeNode(String.join(SEPARATOR, table.getName(), StringUtil.isEmpty(table.getRemarks()) ? "" :  table.getRemarks()));
                 for (Column column : table.getColumns()) {
@@ -178,12 +202,10 @@ public class MainDialog extends JDialog {
                 }
                 root.add(tableNode);
             }
-            tableTree.setModel(new DefaultTreeModel(root));
-            // multiple
-            TreeSelectionModel treeSelect = tableTree.getSelectionModel();
-            treeSelect.setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
-            tableTree.setSelectionModel(treeSelect);
-        });
+            return new DefaultTreeModel(root);
+        }
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Database" + SEPARATOR + "Refreshed " + TimeUtil.getTimeSS());
+        return new DefaultTreeModel(root);
     }
 
     private void onOK() {
@@ -194,14 +216,13 @@ public class MainDialog extends JDialog {
         config.setTemplates(templateTypes.getSelectedValuesList().stream().map(TemplateType::get).toArray(TemplateType[]::new));
         config.setCustomTemplate(customTemplate.getText().trim());
         // save store
-        Map<String, Config> configMap = db2jCeStateService.getConfig();
-        if (configMap == null) {
-            configMap = new HashMap<>(1);
-        }
-        configMap.put(HISTORY, config);
-        db2jCeStateService.setConfig(configMap);
+        db2jCeStateService.setConfig(config);
         // get select table
         DefaultMutableTreeNode[] selectedNodes = tableTree.getSelectedNodes(DefaultMutableTreeNode.class, null);
+        if (selectedNodes.length <= 0) {
+            Messages.showErrorDialog(project, "Please select at least one tables", "Error");
+            return;
+        }
         GeneratorService generatorService = GeneratorService.of();
         for (DefaultMutableTreeNode selectedNode : selectedNodes) {
             if (1 == selectedNode.getLevel()) {

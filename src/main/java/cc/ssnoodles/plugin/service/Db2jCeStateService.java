@@ -1,13 +1,14 @@
 package cc.ssnoodles.plugin.service;
 
 import cc.ssnoodles.db.domain.Config;
+import cc.ssnoodles.db.domain.Table;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * 配置持久化
@@ -17,7 +18,9 @@ import java.util.Map;
  */
 @State(name = "Db2jCeStateService", storages = {@Storage("db2j-ce-config.xml")})
 public class Db2jCeStateService implements PersistentStateComponent<Db2jCeStateService> {
-    private Map<String, Config> config;
+    private Config config;
+
+    private List<Table> tables;
 
     @Nullable
     public static Db2jCeStateService getInstance(Project project) {
@@ -35,12 +38,19 @@ public class Db2jCeStateService implements PersistentStateComponent<Db2jCeStateS
         XmlSerializerUtil.copyBean(state, this);
     }
 
-    public Map<String, Config> getConfig() {
+    public Config getConfig() {
         return config;
     }
 
-    public Db2jCeStateService setConfig(Map<String, Config> config) {
+    public void setConfig(Config config) {
         this.config = config;
-        return this;
+    }
+
+    public List<Table> getTables() {
+        return tables;
+    }
+
+    public void setTables(List<Table> tables) {
+        this.tables = tables;
     }
 }
