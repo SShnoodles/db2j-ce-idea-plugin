@@ -45,9 +45,9 @@ public class MainDialog extends JDialog {
     private Db2jCeStateService db2jCeStateService;
     private Config config;
 
-    private static final String SEPARATOR = " | ";
+    public static final String SEPARATOR = " | ";
 
-    private static final String ICONS = "/icons/";
+    public static final String ICONS = "/icons/";
 
     public MainDialog(AnActionEvent anActionEvent) {
         this.project = anActionEvent.getData(PlatformDataKeys.PROJECT);
@@ -188,6 +188,7 @@ public class MainDialog extends JDialog {
             tableTree.setModel(toTreeNode(TemplateImpl.TABLES));
             db2jCeStateService.setTables(TemplateImpl.TABLES);
         });
+        tableTree.setCellRenderer(new MyDefaultTreeCellRenderer());
     }
 
     private TreeModel toTreeNode(List<Table> tables) {
