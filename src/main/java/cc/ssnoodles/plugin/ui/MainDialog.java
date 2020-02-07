@@ -23,6 +23,7 @@ import javax.swing.tree.*;
 import java.awt.event.*;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class MainDialog extends JDialog {
     private JPanel contentPane;
@@ -193,7 +194,7 @@ public class MainDialog extends JDialog {
 
     private TreeModel toTreeNode(List<Table> tables) {
         if (tables != null && tables.size() > 0) {
-            String dateTime = tables.get(0).getDateTime() == null ? "" : TimeUtil.DATE_TIME_SS.format(tables.get(0).getDateTime());
+            String dateTime = tables.get(0).getTimestamp() == 0 ? "" : TimeUtil.DATE_TIME_SS.format(TimeUtil.timestampToLocalDateTime(tables.get(0).getTimestamp()));
             DefaultMutableTreeNode root = new DefaultMutableTreeNode("Database" + SEPARATOR + "Refreshed " + dateTime);
             for (Table table : tables) {
                 DefaultMutableTreeNode tableNode = new DefaultMutableTreeNode(String.join(SEPARATOR, table.getName(), StringUtil.isEmpty(table.getRemarks()) ? "" :  table.getRemarks()));
@@ -225,18 +226,46 @@ public class MainDialog extends JDialog {
             return;
         }
         GeneratorService generatorService = GeneratorService.of();
+        Set<Table> selectTables = new HashSet<>();
+        Map<Table, List<Column>> columnSet = new HashMap<>();
         for (DefaultMutableTreeNode selectedNode : selectedNodes) {
             if (1 == selectedNode.getLevel()) {
                 String tableName = selectedNode.getUserObject().toString().split(SEPARATOR)[0];
-                Template.TABLES.stream().filter(t -> t.getName().equals(tableName)).findFirst().ifPresent(
-                        table -> generatorService.create(project, config, table)
+                Template.TABLES.stream().filter(t -> t.getName().equals(tableName)).findFirst().ifPresent(selectTables::add);
+            }
+            // custom table columns
+            if (2 == selectedNode.getLevel()) {
+                DefaultMutableTreeNode parent = (DefaultMutableTreeNode)selectedNode.getParent();
+                String tableName = parent.getUserObject().toString().split(SEPARATOR)[0];
+                String columnName = selectedNode.getUserObject().toString().split(SEPARATOR)[0];
+                Template.TABLES.stream().filter(t -> t.getName().equals(tableName)).findFirst()
+                        .ifPresent(table -> table.getColumns().stream().filter(c -> c.getName().equals(columnName)).findFirst()
+                                .ifPresent(column -> columnSet.computeIfAbsent(table, k -> new ArrayList<>()).add(column))
                 );
             }
-            // TODO custom table columns
-//            if (2 == selectedNode.getLevel()) {
-//                DefaultMutableTreeNode parent = (DefaultMutableTreeNode)selectedNode.getParent();
-//            }
         }
+        if (columnSet.size() > 0) {
+            columnSet.forEach((k, v) -> {
+                if (!selectTables.contains(k)) {
+                    selectTables.add(k);
+                }
+            });
+            // generate code
+            selectTables.stream().map(table -> {
+                Table newTable = new Table();
+                newTable.setName(table.getName());
+                newTable.setClassName(table.getClassName());
+                newTable.setRemarks(table.getRemarks());
+                newTable.setTimestamp(table.getTimestamp());
+                newTable.setPrimaryKey(table.isPrimaryKey());
+                newTable.setPrimaryKeys(table.getPrimaryKeys());
+                newTable.setColumns(columnSet.get(table));
+                return newTable;
+            }).forEach(table -> generatorService.create(project, config, table));
+        } else {
+            selectTables.forEach(table -> generatorService.create(project, config, table));
+        }
+
         dispose();
     }
 

@@ -56,7 +56,7 @@ public class GeneratorService {
                 if (TemplateType.JPA.equals(type)) {
                     JpaTemplate template = new JpaTemplate();
                     FileUtil.write2JavaFiles(projectPath + File.separator + config.getOutPath() + File.separator + template.className(table.getName(), config.getSingleTableRename()),
-                            domainPackage(config.getOutPath()) + VelocityUtil.generate(loadTemplate(TemplateType.JPA), template.getContent(config, table)),
+                            domainPackage(config.getOutPath()) + VelocityUtil.generate(loadTemplate(TemplateType.JPA), template.getContent(config, table, "javax.persistence.*")),
                             config.isOverwriteFiles());
                 }
                 if (TemplateType.REPOSITORY.equals(type)) {
