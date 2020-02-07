@@ -6,20 +6,20 @@
     <description>
         <![CDATA[
         <ul>
-            <li>Help you generate java files from database tables.<li/>
-            <li>Support Oracle、Postgresql、Mysql.<li/>
-            <li>Dependence spring、spring-data-jpa、lambok、querydsl annotations.<li/>
+            <li>Help you generate java files from database tables.</li>
+            <li>Support Oracle、Postgresql、Mysql.</li>
+            <li>Dependence spring、spring-data-jpa、lambok、querydsl annotations.</li>
         </ul>
         <ul>
-           <li>Generate list:<li/>
-           <li>* Pojo<li/>
-           <li>* Dto<li/>
-           <li>* Jpa<li/>
-        <ul/>
+           <li>Generate list:</li>
+           <li>* Pojo</li>
+           <li>* Dto</li>
+           <li>* Jpa</li>
+        </ul>
         ]]>
     </description>
 
-    <idea-version since-build="181"/>
+    <idea-version since-build="191"/>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
          on how to target different products -->
