@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * 配置持久化
+ * State Component
  * @author ssnoodles
  * @version 1.0
  * Create at 2019-02-10 12:57

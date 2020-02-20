@@ -15,6 +15,7 @@
            <li>* Pojo</li>
            <li>* Dto</li>
            <li>* Jpa</li>
+           <li>* Repository</li>
         </ul>
         ]]>
     </description>

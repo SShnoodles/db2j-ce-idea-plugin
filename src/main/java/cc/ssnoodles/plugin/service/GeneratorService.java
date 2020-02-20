@@ -9,7 +9,9 @@ import com.intellij.ide.fileTemplates.impl.UrlUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.ExceptionUtil;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
 /**
  * @author ssnoodles
@@ -26,11 +28,12 @@ public class GeneratorService {
         return G;
     }
 
-    public static final String DEFAULT_DIR = "/templates";
+    public static final String DEFAULT_DIR = "templates";
 
     public String loadTemplate(TemplateType templateType) {
         try {
-            return UrlUtil.loadText(GeneratorService.class.getResource(DEFAULT_DIR + File.separator + templateType.getType() + ".vm")).replace("\r", "");
+            URL resource = GeneratorService.class.getResource("/" + DEFAULT_DIR + "/" + templateType.getType() + ".vm");
+            return UrlUtil.loadText(resource);
         } catch (IOException e) {
             ExceptionUtil.rethrow(e);
         }

@@ -16,6 +16,12 @@ Idea Version：Community 2018.1+
   - Download the [jar](https://github.com/SShnoodles/db2j-ce-idea-plugin/releases) and install it manually using **Preferences** > **Plugins** > **Install plugin from disk...**
 
 # Update log
+1.0.2 Community 2019.1+
+* Fixed windows url error 
+
+1.0.1 Community 2019.1+
+* Support select columns
+
 1.0.0 Community 2018.1+
 * Support entity class、repository interface
 
