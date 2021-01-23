@@ -1,4 +1,4 @@
-package cc.ssnoodles.plugin.service;
+package cc.ssnoodles.plugin.domain;
 
 import cc.ssnoodles.db.domain.Config;
 import cc.ssnoodles.db.domain.Table;

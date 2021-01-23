@@ -5,15 +5,17 @@ import cc.ssnoodles.db.constant.TemplateType;
 import cc.ssnoodles.db.domain.*;
 import cc.ssnoodles.db.handler.Template;
 import cc.ssnoodles.db.util.*;
+import cc.ssnoodles.plugin.domain.TemplateImpl;
+import cc.ssnoodles.plugin.domain.TreeData;
 import cc.ssnoodles.plugin.service.*;
 import cc.ssnoodles.plugin.util.UiUtil;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.ui.components.JBList;
-import com.intellij.ui.scale.*;
 import com.intellij.ui.treeStructure.Tree;
 
 import javax.swing.*;
@@ -21,9 +23,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.tree.*;
 import java.awt.event.*;
-import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class MainDialog extends JDialog {
     private JPanel contentPane;
@@ -34,9 +34,9 @@ public class MainDialog extends JDialog {
     private JPasswordField password;
     private JTextField author;
     private JRadioButton isOverwriteFiles;
-    private Tree tableTree;
+    private Tree schemaTree;
     private JTextField singleRename;
-    private JTextField outPath;
+    private TextFieldWithBrowseButton outPath;
     private JButton loadButton;
     private JTextArea customTemplate;
     private JBList<String> templateTypes;
@@ -46,15 +46,13 @@ public class MainDialog extends JDialog {
     private Db2jCeStateService db2jCeStateService;
     private Config config;
 
-    public static final String SEPARATOR = " | ";
-
     public static final String ICONS = "/icons/";
 
     public MainDialog(AnActionEvent anActionEvent) {
         this.project = anActionEvent.getData(PlatformDataKeys.PROJECT);
         db2jCeStateService = Db2jCeStateService.getInstance(project);
 
-        UiUtil.centerDialog(this,"Db2j-CE", 1200, 600);
+        UiUtil.centerDialog(this,"Db2j-CE", 1200, 800);
 
         setContentPane(contentPane);
         setModal(true);
@@ -96,18 +94,18 @@ public class MainDialog extends JDialog {
         templateTypes.setSelectionModel(listSelect);
 
         // init tree root node
-        List<Table> tables = db2jCeStateService.getTables();
-        if (tables != null) {
-            tableTree.setModel(toTreeNode(tables));
+        List<Schema> schemas = db2jCeStateService.getSchemas();
+        if (schemas != null) {
+            schemaTree.setModel(toTreeNode(schemas));
         } else {
             DefaultMutableTreeNode database = new DefaultMutableTreeNode("Database");
-            tableTree.setModel(new DefaultTreeModel(database));
+            schemaTree.setModel(new DefaultTreeModel(database));
         }
 
         // set tree multiple
-        TreeSelectionModel treeSelect = tableTree.getSelectionModel();
+        TreeSelectionModel treeSelect = schemaTree.getSelectionModel();
         treeSelect.setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
-        tableTree.setSelectionModel(treeSelect);
+        schemaTree.setSelectionModel(treeSelect);
 
         Config config = db2jCeStateService.getConfig();
         if (config != null) {
@@ -127,9 +125,8 @@ public class MainDialog extends JDialog {
         } else {
             config = FileUtil.PROPERTIES;
             // init out path
-            String defaultOutPath = "src/main/java";
-            config.setOutPath(defaultOutPath);
-            outPath.setText(defaultOutPath);
+            config.setOutPath(project.getBasePath());
+            outPath.setText(project.getBasePath());
             templateTypes.setSelectedIndex(0);
         }
         this.config = config;
@@ -176,7 +173,7 @@ public class MainDialog extends JDialog {
                 MainDialog.this.config.setPassword(new String(password.getPassword()));
             }
         });
-        loadButton.setIcon(IconLoader.getIcon(ICONS + "reload.png"));
+        loadButton.setIcon(IconLoader.getIcon(ICONS + "reload.png", MainDialog.class));
         loadButton.addActionListener(e -> {
             TemplateImpl template = new TemplateImpl();
             try {
@@ -186,27 +183,34 @@ public class MainDialog extends JDialog {
                 Messages.showErrorDialog(project, ex.getMessage(), "Database Collection Error");
                 return;
             }
-            tableTree.setModel(toTreeNode(TemplateImpl.TABLES));
-            db2jCeStateService.setTables(TemplateImpl.TABLES);
+            schemaTree.setModel(toTreeNode(TemplateImpl.SCHEMAS));
+            db2jCeStateService.setSchemas(TemplateImpl.SCHEMAS);
         });
-        tableTree.setCellRenderer(new MyDefaultTreeCellRenderer());
+        schemaTree.setCellRenderer(new MyDefaultTreeCellRenderer());
     }
 
-    private TreeModel toTreeNode(List<Table> tables) {
-        if (tables != null && tables.size() > 0) {
-            String dateTime = tables.get(0).getTimestamp() == 0 ? "" : TimeUtil.DATE_TIME_SS.format(TimeUtil.timestampToLocalDateTime(tables.get(0).getTimestamp()));
-            DefaultMutableTreeNode root = new DefaultMutableTreeNode("Database" + SEPARATOR + "Refreshed " + dateTime);
-            for (Table table : tables) {
-                DefaultMutableTreeNode tableNode = new DefaultMutableTreeNode(String.join(SEPARATOR, table.getName(), StringUtil.isEmpty(table.getRemarks()) ? "" :  table.getRemarks()));
-                for (Column column : table.getColumns()) {
-                    DefaultMutableTreeNode columnNode = new DefaultMutableTreeNode(String.join(SEPARATOR, column.getName(), column.getType(), StringUtil.isEmpty(column.getRemarks()) ? "" :  column.getRemarks()));
-                    tableNode.add(columnNode);
+    private TreeModel toTreeNode(List<Schema> schemas) {
+        String title;
+        if (schemas != null && schemas.size() > 0) {
+            String dateTime = schemas.get(0).getTimestamp() == 0 ? "" : TimeUtil.DATE_TIME_SS.format(TimeUtil.timestampToLocalDateTime(schemas.get(0).getTimestamp()));
+            title = "Database(" + schemas.size() + ") Refreshed " + dateTime;
+            DefaultMutableTreeNode root = new DefaultMutableTreeNode(new TreeData<>(title));
+            for (Schema schema : schemas) {
+                DefaultMutableTreeNode schemaNode = new DefaultMutableTreeNode(new TreeData<>(schema));
+                for (Table table : schema.getTables()) {
+                    DefaultMutableTreeNode tableNode = new DefaultMutableTreeNode(new TreeData<>(table));
+                    for (Column column : table.getColumns()) {
+                        DefaultMutableTreeNode columnNode = new DefaultMutableTreeNode(new TreeData<>(column));
+                        tableNode.add(columnNode);
+                    }
+                    schemaNode.add(tableNode);
                 }
-                root.add(tableNode);
+                root.add(schemaNode);
             }
             return new DefaultTreeModel(root);
         }
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Database" + SEPARATOR + "Refreshed " + TimeUtil.getTimeSS());
+        title = "Database(0) Refreshed " + TimeUtil.getTimeSS();
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode(new TreeData<>(title));
         return new DefaultTreeModel(root);
     }
 
@@ -220,7 +224,7 @@ public class MainDialog extends JDialog {
         // save store
         db2jCeStateService.setConfig(config);
         // get select table
-        DefaultMutableTreeNode[] selectedNodes = tableTree.getSelectedNodes(DefaultMutableTreeNode.class, null);
+        DefaultMutableTreeNode[] selectedNodes = schemaTree.getSelectedNodes(DefaultMutableTreeNode.class, null);
         if (selectedNodes.length <= 0) {
             Messages.showErrorDialog(project, "Please select at least one tables", "Error");
             return;
@@ -229,19 +233,18 @@ public class MainDialog extends JDialog {
         Set<Table> selectTables = new HashSet<>();
         Map<Table, List<Column>> columnSet = new HashMap<>();
         for (DefaultMutableTreeNode selectedNode : selectedNodes) {
-            if (1 == selectedNode.getLevel()) {
-                String tableName = selectedNode.getUserObject().toString().split(SEPARATOR)[0];
-                Template.TABLES.stream().filter(t -> t.getName().equals(tableName)).findFirst().ifPresent(selectTables::add);
+            TreeData<?> treeData = (TreeData<?>)selectedNode.getUserObject();
+            if (treeData.getData() instanceof Table) {
+                Template.SCHEMAS.forEach(schema -> schema.getTables().stream().filter(t -> t.equals(treeData.getData())).findFirst().ifPresent(selectTables::add));
             }
             // custom table columns
-            if (2 == selectedNode.getLevel()) {
+            if (treeData.getData() instanceof Column) {
                 DefaultMutableTreeNode parent = (DefaultMutableTreeNode)selectedNode.getParent();
-                String tableName = parent.getUserObject().toString().split(SEPARATOR)[0];
-                String columnName = selectedNode.getUserObject().toString().split(SEPARATOR)[0];
-                Template.TABLES.stream().filter(t -> t.getName().equals(tableName)).findFirst()
-                        .ifPresent(table -> table.getColumns().stream().filter(c -> c.getName().equals(columnName)).findFirst()
-                                .ifPresent(column -> columnSet.computeIfAbsent(table, k -> new ArrayList<>()).add(column))
-                );
+                Table table = (Table)((TreeData<?>)parent.getUserObject()).getData();
+                Column column = (Column)((TreeData<?>)selectedNode.getUserObject()).getData();
+                Template.SCHEMAS.forEach(schema -> schema.getTables().stream().filter(t -> t.equals(table)).findFirst()
+                        .flatMap(t -> t.getColumns().stream().filter(c -> c.equals(column)).findFirst())
+                        .ifPresent(c -> columnSet.computeIfAbsent(table, k -> new ArrayList<>()).add(c)));
             }
         }
         if (columnSet.size() > 0) {

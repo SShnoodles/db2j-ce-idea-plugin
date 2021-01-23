@@ -5,7 +5,7 @@ Support:
 * entity class
 * repository interface
 
-Idea Version：Community 2018.1+
+Idea Version：Community 2019.1+
 
 [Plugin Site](https://plugins.jetbrains.com/plugin/13768-db2j-ce)
 
@@ -16,6 +16,9 @@ Idea Version：Community 2018.1+
   - Download the [jar](https://github.com/SShnoodles/db2j-ce-idea-plugin/releases) and install it manually using **Preferences** > **Plugins** > **Install plugin from disk...**
 
 # Update log
+1.0.3 Community 2019.1+
+* Added Schemas to Database Tree
+
 1.0.2 Community 2019.1+
 * Fixed windows url error 
 
@@ -40,9 +43,9 @@ Open plugin from **Tools** > **Db2j-CE**
 
 # Jdbc Driver version
 ```groovy
-compile group: 'org.postgresql', name: 'postgresql', version: '42.2.9'
-compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.18'
-compile group: 'com.oracle', name: 'ojdbc6', version: '11.2.0.3'
+implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.18'
+implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.23'
+implementation group: 'com.oracle.database.jdbc', name: 'ojdbc8', version: '21.1.0.0'
 ```
 
 # Reference projects

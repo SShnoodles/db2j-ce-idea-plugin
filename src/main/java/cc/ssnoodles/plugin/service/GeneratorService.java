@@ -41,30 +41,29 @@ public class GeneratorService {
     }
 
     public void create(Project project, Config config, Table table) {
-        String projectPath = project.getBasePath();
         if (StringUtil.isEmpty(config.getCustomTemplate())) {
             for (TemplateType type : config.getTemplates()) {
                 if (TemplateType.POJO.equals(type)) {
                     PojoTemplate template = new PojoTemplate();
-                    FileUtil.write2JavaFiles(projectPath + File.separator + config.getOutPath() + File.separator + template.className(table.getName(), config.getSingleTableRename()),
+                    FileUtil.write2JavaFiles(config.getOutPath() + File.separator + template.className(table.getName(), config.getSingleTableRename()),
                             domainPackage(config.getOutPath()) + VelocityUtil.generate(loadTemplate(TemplateType.POJO), template.getContent(config, table)),
                             config.isOverwriteFiles());
                 }
                 if (TemplateType.DTO.equals(type)) {
                     DtoTemplate template = new DtoTemplate();
-                    FileUtil.write2JavaFiles(projectPath + File.separator + config.getOutPath() + File.separator + template.className(table.getName(), config.getSingleTableRename()),
+                    FileUtil.write2JavaFiles(config.getOutPath() + File.separator + template.className(table.getName(), config.getSingleTableRename()),
                             domainPackage(config.getOutPath()) + VelocityUtil.generate(loadTemplate(TemplateType.DTO), template.getContent(config, table)),
                             config.isOverwriteFiles());
                 }
                 if (TemplateType.JPA.equals(type)) {
                     JpaTemplate template = new JpaTemplate();
-                    FileUtil.write2JavaFiles(projectPath + File.separator + config.getOutPath() + File.separator + template.className(table.getName(), config.getSingleTableRename()),
+                    FileUtil.write2JavaFiles(config.getOutPath() + File.separator + template.className(table.getName(), config.getSingleTableRename()),
                             domainPackage(config.getOutPath()) + VelocityUtil.generate(loadTemplate(TemplateType.JPA), template.getContent(config, table, "javax.persistence.*")),
                             config.isOverwriteFiles());
                 }
                 if (TemplateType.REPOSITORY.equals(type)) {
                     RepositoryTemplate template = new RepositoryTemplate();
-                    FileUtil.write2JavaFiles(projectPath + File.separator + config.getOutPath() + File.separator + template.className(table.getName(), config.getSingleTableRename()),
+                    FileUtil.write2JavaFiles(config.getOutPath() + File.separator + template.className(table.getName(), config.getSingleTableRename()),
                             domainPackage(config.getOutPath()) + VelocityUtil.generate(loadTemplate(TemplateType.REPOSITORY), template.getContent(config, table)),
                             config.isOverwriteFiles());
                 }
@@ -72,7 +71,7 @@ public class GeneratorService {
         } else {
             // has custom
             CustomTemplate template = new CustomTemplate();
-            FileUtil.write2JavaFiles(projectPath + File.separator + config.getOutPath() + File.separator + template.className(table.getName(), config.getSingleTableRename()),
+            FileUtil.write2JavaFiles(config.getOutPath() + File.separator + template.className(table.getName(), config.getSingleTableRename()),
                     domainPackage(config.getOutPath()) + VelocityUtil.generate(config.getCustomTemplate(), template.getContent(config, table)),
                     config.isOverwriteFiles());
         }
@@ -81,7 +80,7 @@ public class GeneratorService {
     private static String domainPackage(String packagePath) {
         String parsePackage = parsePackage(packagePath);
         String separator = System.getProperty("line.separator");
-        return "".equals(parsePackage) ? "" : "package " + parsePackage + ";" + separator + separator;
+        return "".equals(parsePackage) ? "package domain;"  + separator + separator : "package " + parsePackage + ";" + separator + separator;
     }
 
     private static String parsePackage(String packagePath) {

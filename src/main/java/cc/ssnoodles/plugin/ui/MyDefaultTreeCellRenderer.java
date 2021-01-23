@@ -1,5 +1,9 @@
 package cc.ssnoodles.plugin.ui;
 
+import cc.ssnoodles.db.domain.Column;
+import cc.ssnoodles.db.domain.Schema;
+import cc.ssnoodles.db.domain.Table;
+import cc.ssnoodles.plugin.domain.TreeData;
 import com.intellij.openapi.util.IconLoader;
 
 import javax.swing.*;
@@ -17,12 +21,20 @@ public class MyDefaultTreeCellRenderer extends DefaultTreeCellRenderer {
     public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
         super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
-        if (0 == node.getLevel()) {
-            this.setIcon(IconLoader.getIcon(MainDialog.ICONS + "database.png"));
-        } else if (1 == node.getLevel()) {
-            this.setIcon(IconLoader.getIcon(MainDialog.ICONS + "table.png"));
-        } else {
-            this.setIcon(IconLoader.getIcon(MainDialog.ICONS + "file.png"));
+        TreeData<?> data = (TreeData<?>)node.getUserObject();
+        if (data.getData() instanceof String) {
+            this.setIcon(IconLoader.getIcon(MainDialog.ICONS + "database.png", MyDefaultTreeCellRenderer.class));
+        } else if (data.getData() instanceof Schema) {
+            this.setIcon(IconLoader.getIcon(MainDialog.ICONS + "schema.png", MyDefaultTreeCellRenderer.class));
+        } else if (data.getData() instanceof Table) {
+            this.setIcon(IconLoader.getIcon(MainDialog.ICONS + "table.png", MyDefaultTreeCellRenderer.class));
+        } else if (data.getData() instanceof Column) {
+            Column column = (Column)data.getData();
+            if (column.isPrimaryKey()) {
+                this.setIcon(IconLoader.getIcon(MainDialog.ICONS + "key.png", MyDefaultTreeCellRenderer.class));
+            } else {
+                this.setIcon(IconLoader.getIcon(MainDialog.ICONS + "file.png", MyDefaultTreeCellRenderer.class));
+            }
         }
         return this;
     }

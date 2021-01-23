@@ -1,6 +1,7 @@
 package cc.ssnoodles.plugin.service;
 
 import cc.ssnoodles.db.domain.Config;
+import cc.ssnoodles.db.domain.Schema;
 import cc.ssnoodles.db.domain.Table;
 import com.intellij.openapi.components.*;
 import com.intellij.openapi.project.Project;
@@ -20,7 +21,9 @@ import java.util.List;
 public class Db2jCeStateService implements PersistentStateComponent<Db2jCeStateService> {
     private Config config;
 
-    private List<Table> tables;
+    private String databaseTitle;
+
+    private List<Schema> schemas;
 
     @Nullable
     public static Db2jCeStateService getInstance(Project project) {
@@ -46,11 +49,19 @@ public class Db2jCeStateService implements PersistentStateComponent<Db2jCeStateS
         this.config = config;
     }
 
-    public List<Table> getTables() {
-        return tables;
+    public List<Schema> getSchemas() {
+        return schemas;
     }
 
-    public void setTables(List<Table> tables) {
-        this.tables = tables;
+    public void setSchemas(List<Schema> schemas) {
+        this.schemas = schemas;
+    }
+
+    public String getDatabaseTitle() {
+        return databaseTitle;
+    }
+
+    public void setDatabaseTitle(String databaseTitle) {
+        this.databaseTitle = databaseTitle;
     }
 }
