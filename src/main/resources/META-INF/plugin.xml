@@ -31,7 +31,8 @@
     </extensions>
 
     <actions>
-        <action id="db2j-ce" class="cc.ssnoodles.plugin.MainAction" text="Db2j-CE" description="Generating java files from database tables.">
+        <action id="db2j-ce" class="cc.ssnoodles.plugin.MainAction" text="Db2j-CE" description="Generating java files from database tables."
+                icon="MyIcons.LOGO">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
     </actions>

@@ -11,12 +11,13 @@ import cc.ssnoodles.plugin.service.*;
 import cc.ssnoodles.plugin.util.UiUtil;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
+import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
-import com.intellij.openapi.util.IconLoader;
 import com.intellij.ui.components.JBList;
 import com.intellij.ui.treeStructure.Tree;
+import icons.MyIcons;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -45,8 +46,6 @@ public class MainDialog extends JDialog {
     private AnActionEvent anActionEvent;
     private Db2jCeStateService db2jCeStateService;
     private Config config;
-
-    public static final String ICONS = "/icons/";
 
     public MainDialog(AnActionEvent anActionEvent) {
         this.project = anActionEvent.getData(PlatformDataKeys.PROJECT);
@@ -95,12 +94,7 @@ public class MainDialog extends JDialog {
 
         // init tree root node
         List<Schema> schemas = db2jCeStateService.getSchemas();
-        if (schemas != null) {
-            schemaTree.setModel(toTreeNode(schemas));
-        } else {
-            DefaultMutableTreeNode database = new DefaultMutableTreeNode("Database");
-            schemaTree.setModel(new DefaultTreeModel(database));
-        }
+        schemaTree.setModel(toTreeNode(schemas));
 
         // set tree multiple
         TreeSelectionModel treeSelect = schemaTree.getSelectionModel();
@@ -173,7 +167,7 @@ public class MainDialog extends JDialog {
                 MainDialog.this.config.setPassword(new String(password.getPassword()));
             }
         });
-        loadButton.setIcon(IconLoader.getIcon(ICONS + "reload.png", MainDialog.class));
+        loadButton.setIcon(MyIcons.RELOAD);
         loadButton.addActionListener(e -> {
             TemplateImpl template = new TemplateImpl();
             try {
@@ -187,6 +181,10 @@ public class MainDialog extends JDialog {
             db2jCeStateService.setSchemas(TemplateImpl.SCHEMAS);
         });
         schemaTree.setCellRenderer(new MyDefaultTreeCellRenderer());
+
+        outPath.setEditable(false);
+        outPath.setText(project.getBasePath());
+        outPath.addBrowseFolderListener(null, null, project, FileChooserDescriptorFactory.createSingleFolderDescriptor());
     }
 
     private TreeModel toTreeNode(List<Schema> schemas) {
