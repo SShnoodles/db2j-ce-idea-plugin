@@ -16,6 +16,10 @@ Idea Version：Community 2019.1+
   - Download the [jar](https://github.com/SShnoodles/db2j-ce-idea-plugin/releases) and install it manually using **Preferences** > **Plugins** > **Install plugin from disk...**
 
 # Update log
+1.0.5 Community 2019.1+
+* Fixed Duplicate imports
+* Fixed Duplicate columns
+
 1.0.3 Community 2019.1+
 * Added Schemas to Database Tree
 
@@ -43,8 +47,8 @@ Open plugin from **Tools** > **Db2j-CE**
 
 # Jdbc Driver version
 ```groovy
-implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.18'
-implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.23'
+implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.19'
+implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.24'
 implementation group: 'com.oracle.database.jdbc', name: 'ojdbc8', version: '21.1.0.0'
 ```
 

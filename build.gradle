@@ -1,26 +1,26 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.intellij' version '0.6.5'
+    id 'org.jetbrains.intellij' version '0.7.2'
 }
 
 group 'cc.ssnoodles'
-version '1.0.4'
+version '1.0.5'
 
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
 
 repositories {
     mavenLocal()
-//    maven { url 'http://repo.spring.io/plugins-release/' }
     mavenCentral()
 }
 
 dependencies {
-    implementation group: 'cc.ssnoodles', name: 'db2j-ce', version: '1.1.0'
+    implementation group: 'cc.ssnoodles', name: 'db2j-ce', version: '1.1.1'
 }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
     pluginName 'Db2j-CE'
     updateSinceUntilBuild false
+    localPath ideaSdkLocalPath
 }
